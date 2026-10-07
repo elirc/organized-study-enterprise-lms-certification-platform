@@ -23,3 +23,12 @@ Migration discipline is partly technical and partly team habit: schemas should c
 Implemented verification scripts and migration entry points. Added final system design documentation.
 
 A junior developer should learn that a codebase is not finished when the first screen renders; maintainability comes from repeatable verification and readable design records.
+
+## As built (checked against this snapshot)
+
+- Root `verify` = `typecheck && test && build` (`package.json`); `db:migrate` runs `prisma migrate dev` in `@lms/api`.
+- Tests: ten domain tests (`packages/domain/src/domain.test.ts`) and one API test that only checks `createApp` returns a function (`apps/api/src/app.test.ts`). The worker and web packages pass with no tests or have none.
+- There is no `apps/api/prisma/migrations/` folder, no Playwright configuration and no CI workflow in this snapshot.
+- `docs/architecture/final-system-design.md` exists and now includes how to run the system, verified findings and exercises.
+
+**Exercise.** *Goal:* add one API test with `supertest` that logs in as the seeded learner against a migrated and seeded database. *Check:* `npm test` shows the test passing, and it fails if you change the seeded password.

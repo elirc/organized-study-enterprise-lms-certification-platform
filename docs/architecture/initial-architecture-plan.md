@@ -97,3 +97,25 @@ The docs directory is part of the deliverable:
 - Build journal appended after each feature.
 - Code walkthrough docs for architecturally important files.
 - Final system design document after the backlog is implemented.
+
+## Plan versus code (2026-10 docs pass)
+
+This plan was written before the code. Checked against this snapshot:
+
+| Plan item | In the code |
+|---|---|
+| `apps/api`, `apps/web`, `apps/worker`, `packages/domain` | All four exist as npm workspaces (root `package.json`). |
+| Backend modules `auth` … `platform` | Seven route files instead of twelve modules: `auth`, `catalog`, `authoring`, `learner`, `admin`, `certificate`, `platform` (`apps/api/src/app.ts:20-26`). Enrollments, quizzes and assignments live in `learner.routes.ts`; reporting, imports, impersonation, flags and API keys in `admin.routes.ts`. There are no service classes; routes call Prisma directly. |
+| "JWT creation, demo auth" | Real JWT login with bcrypt (`apps/api/src/routes/auth.routes.ts:17-50`); no separate demo-auth path. |
+| Principle: "Backend authorization is the source of truth" | Role checks exist per organization, but several routes do not check that the record belongs to that organization, and the learner routes do not check ownership (`docs/architecture/final-system-design.md`, findings 1 and 4). |
+| Principle: "Audit logs capture security-sensitive events" | Audited: course creation, enrollment completion, bulk import. Not audited: impersonation, grading, feature flags, API keys, publishing. |
+| Data model groups | All listed models exist (`apps/api/prisma/schema.prisma`, 36 models). Several have no API yet: cohorts, learning paths, prerequisites, content packages, video assets, transcript rows, notifications. |
+| Frontend plan | All listed screens exist, but they render `apps/web/lib/demo-data.ts`; none calls the API. |
+| Background jobs | Four queues and processors exist (`apps/worker/src`); CSV export generation has no processor, and nothing enqueues jobs for the other four. |
+| Testing strategy | Domain tests cover roles, completion, quiz scoring and randomization, transcript summary and feature flags (`packages/domain/src/domain.test.ts`). API and browser workflow tests have not been added. |
+
+## Exercise
+
+**Goal:** pick one planned principle — "Content and learner state are separate" — and find the code that enforces it and the code that undermines it.
+
+**Check:** you cite `Enrollment.courseVersionId` (the separation, `schema.prisma:192-216`) and the enroll route's choice of the highest version number regardless of status (`apps/api/src/routes/learner.routes.ts:56-59`), which can attach learner state to unpublished content.
